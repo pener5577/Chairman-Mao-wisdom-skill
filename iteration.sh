@@ -8,7 +8,7 @@ cd /home/kali/.openclaw/workspace/Chairman-Mao-wisdom-skill
 echo "[$(date)] 毛选skill迭代开始" >> /home/kali/.openclaw/workspace/Chairman-Mao-wisdom-skill/iteration.log
 
 # 检查是否有变更
-if git diff --quiet; then
+if git diff --quiet && git diff --staged --quiet; then
     echo "[$(date)] 无变更，跳过" >> /home/kali/.openclaw/workspace/Chairman-Mao-wisdom-skill/iteration.log
     exit 0
 fi
