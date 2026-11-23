@@ -110,6 +110,25 @@ def catalog_entries(catalog):
             yield volume, title, url
 
 
+@dataclass
+class BookItem:
+    section: str
+    title: str
+    number: str
+    url: Optional[str]
+    sources: list
+
+    def address(self):
+        lines = [f"目录第 {self.number} 项"]
+        if self.url:
+            lines.append(f"正文：{self.url}")
+            page = re.search(r"\.pdf#page=(\d+)$", self.url)
+            if page:
+                lines.append(f"PDF 第 {page.group(1)} 页")
+        lines.extend(f"{label}：{url}" for label, url in self.sources)
+        return "\n".join(lines)
+
+
 def bibliography_entries(markdown):
     section = ""
     sources = []
@@ -121,13 +140,13 @@ def bibliography_entries(markdown):
         row = re.fullmatch(r"(\d+)\. (.+)", line)
         if section and sources and row:
             number, title = row.groups()
-            direct = MARKDOWN_LINK.fullmatch(title)
             links = sources
+            direct = MARKDOWN_LINK.match(title)
+            url = None
             if direct:
+                links = MARKDOWN_LINK.findall(title[direct.end():]) + sources
                 title, url = direct.groups()
-                links = [("正文", url), *sources]
-            addresses = "\n".join(f"{label}：{url}" for label, url in links)
-            yield section, title, f"目录第 {number} 项\n{addresses}"
+            yield BookItem(section, title, number, url, links)
 
 
 def show_works(terms, parser, collections, *, after_quote_search=False):
@@ -136,7 +155,9 @@ def show_works(terms, parser, collections, *, after_quote_search=False):
         markdown = read_text(COLLECTIONS[collection], parser)
         selected = collection == "选集"
         book = BOOK_NAMES[collection]
-        rows = catalog_entries(markdown) if selected else bibliography_entries(markdown)
+        rows = catalog_entries(markdown) if selected else (
+            (item.section, item.title, item.address()) for item in bibliography_entries(markdown)
+        )
         for section, title, address in rows:
             numeric = section.translate(VOLUME_NUMBERS)
             fields = (searchable(title), book + section, book + numeric)
@@ -160,29 +181,40 @@ def fulltext_command(args, parser):
     else:
         import fulltext
 
-    path = (args.index_path or fulltext.DEFAULT_INDEX).expanduser()
+    poetry = args.collection == "诗词"
+    default_path = fulltext.DEFAULT_INDEX.with_name("poetry.sqlite3") if poetry else fulltext.DEFAULT_INDEX
+    path = (args.index_path or default_path).expanduser()
     if args.keywords:
         parser.error("全文查找请把一个连续片段放在 --text 后；建库命令无需关键词")
     try:
         if args.build_index:
-            catalog = [row for row in catalog_entries(read_text(WORKS, parser)) if not row[0].endswith("附录")]
+            if poetry:
+                items = bibliography_entries(read_text(COLLECTIONS["诗词"], parser))
+                catalog = [(item.section, item.title, item.url) for item in items if item.url]
+                expected = {"正编": 39, "副编": 24}
+            else:
+                catalog = [row for row in catalog_entries(read_text(WORKS, parser)) if not row[0].endswith("附录")]
+                expected = {"第一卷": 18, "第二卷": 40, "第三卷": 31, "第四卷": 70, "第五卷": 70}
             counts = Counter(volume for volume, _, _ in catalog)
-            if counts != {"第一卷": 18, "第二卷": 40, "第三卷": 31, "第四卷": 70, "第五卷": 70}:
+            if counts != expected:
                 parser.exit(2, "篇目目录不完整，未开始建库。\n")
             print(f"正在从目录中的 {len(catalog)} 篇在线转录建立索引……", file=sys.stderr, flush=True)
-            count = fulltext.build_index(path, catalog)
-            print(f"已索引 {count} 篇作品。索引文件：{path}")
+            count = fulltext.build_index(path, catalog, poetry=poetry)
+            print(f"已索引 {count} 个题目。索引文件：{path}")
             return 0
         limit = args.limit or 20
         shown = 0
-        with closing(fulltext.search_index(path, args.text)) as matches:
+        with closing(fulltext.search_index(path, args.text, poetry=poetry)) as matches:
             for volume, title, url, number, snippet in matches:
                 if shown == limit:
                     print(f"已显示前 {limit} 个命中段落。可输入更长的片段缩小范围，或调大 --limit。", file=sys.stderr)
                     break
                 if shown:
                     print()
-                print(f"[全文命中] {volume} · {title}（转录段 {number}）\n{snippet}\n{url}")
+                position = f"题内第 {number} 首" if poetry else f"转录段 {number}"
+                print(f"[全文命中] {volume} · {title}（{position}）\n{snippet}\n{url}")
+                if poetry and title == fulltext.POEM_WITH_GAP and "■" in snippet:
+                    print(f"校读：转录缺字以 ■ 显示，《党的文献》引此句作“东瀛濯剑有书还”。\n{fulltext.GAP_REFERENCE}")
                 shown += 1
         if shown:
             return 0
@@ -198,14 +230,16 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--verified", action="store_true", help="只列出附有核对原文链接的摘句")
     mode.add_argument("--works", action="store_true", help="查《毛泽东选集》一至五卷的篇名或卷次，无关键词时列出全部篇目")
-    mode.add_argument("--build-index", action="store_true", help="联网建立或更新一至五卷的本地全文索引")
+    mode.add_argument("--build-index", action="store_true", help="联网建立或更新《选集》或《诗词集》的本地全文索引")
     mode.add_argument("--text", metavar="引文", help="从已建索引离线定位一段连续文字")
     parser.add_argument("--collection", choices=COLLECTIONS, help="按书查目录，可选选集、文集、诗词")
     parser.add_argument("--index-path", type=Path, metavar="文件", help="指定建库或全文查找使用的 SQLite 文件")
     parser.add_argument("--limit", type=int, metavar="条数", help="全文命中段落的显示上限，默认 20")
     args = parser.parse_args()
-    if args.collection and (args.verified or args.build_index or args.text is not None):
-        parser.error("--collection 用于篇目目录，可单独使用或与 --works 一起使用")
+    if args.collection and args.verified:
+        parser.error("--verified 搜索摘句库，与 --collection 分开使用")
+    if args.collection == "文集" and (args.build_index or args.text is not None):
+        parser.error("《文集》可查篇名与原文入口，全文索引支持《选集》和《诗词集》")
     if args.limit is not None and (args.text is None or args.limit < 1):
         parser.error("--limit 仅用于 --text，请输入正整数")
     if args.build_index or args.text is not None:

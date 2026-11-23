@@ -58,6 +58,8 @@
 
 24 个题目共 25 首，其中《七绝二首·纪念鲁迅八十寿辰》收两首。
 
+第 2 题《七古·送纵宇一郎东行》的网页把“濯”显示为方块。诗句检索支持按“东瀛濯剑”查找，显示时保留转录缺字，并给出校读出处。[《党的文献》引文](https://cpc.people.com.cn/GB/68742/69115/69120/5282691.html)
+
 [核对目录](https://mooc1.chaoxing.com/mooc-ans/ztnodedetailcontroller/visitnodedetail?_fromV2_=&_from_=&courseId=224743181&knowledgeId=561031122&rtag=)
 
 1. [五古·挽易昌陶](https://mooc1.chaoxing.com/mooc-ans/ztnodedetailcontroller/visitnodedetail?_fromV2_=&_from_=&courseId=224743181&knowledgeId=561031163&rtag=)

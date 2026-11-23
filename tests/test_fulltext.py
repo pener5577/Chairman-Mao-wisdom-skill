@@ -10,7 +10,7 @@ from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "scripts"))
-from fulltext import FulltextError, build_index, search_index
+from fulltext import FulltextError, build_index, parse_poems, search_index
 
 
 URL = "https://www.marxists.org/chinese/maozedong/sample.htm"
@@ -112,6 +112,48 @@ class FulltextTests(unittest.TestCase):
         self.assertIn("重新构建", broken.stderr)
         self.build()
         self.assertEqual(self.cli("--text", "读一页书").returncode, 0)
+
+    def test_poetry_search_keeps_group_boundaries_and_excludes_editors(self):
+        url = "https://mooc1.chaoxing.com/mooc-ans/ztnodedetailcontroller/visitnodedetail?courseId=1"
+        html = """<span id="nodeTitleEle">十六字令三首</span>
+        <p>站点导航</p><div id="contentDescriptionBox"><div>
+        <p class="reference">序言样本</p><p class="content">第一首的开头。</p>
+        <p class="center-content">其二</p><p class="content">第二首的上句。</p>
+        <p class="content">第二首的下句。</p><p class="center-content">其三</p>
+        <p class="content">第三首的结尾。</p><p class="content">作者原注</p>
+        <p class="content">编者对诗文的解释。</p></div></div>"""
+        works = [("正编", "十六字令三首", url)]
+        build_index(self.index, works, fetch=lambda _: html, poetry=True)
+        found = self.cli("--collection", "诗词", "--text", "第二首的下句")
+        self.assertEqual(found.returncode, 0, found.stderr)
+        self.assertIn("题内第 2 首", found.stdout)
+        for absent in ("开头第二首", "序言样本", "诗文的解释"):
+            self.assertFalse(list(search_index(self.index, absent, poetry=True)))
+        with self.assertRaises(FulltextError):
+            self.build()
+        self.assertEqual(self.cli("--text", "上句").returncode, 2)
+        self.assertTrue(list(search_index(self.index, "结尾", poetry=True)))
+
+    def test_poetry_refuses_partial_groups_and_same_title_with_wrong_incipit(self):
+        page = """<span id="nodeTitleEle">诗题</span><div id="contentDescriptionBox">
+        <p class="content">甲句开始。</p><p class="content">注释</p></div>"""
+        with self.assertRaises(FulltextError):
+            parse_poems(page, "诗题（首句“乙句”）", "")
+        with self.assertRaises(FulltextError):
+            parse_poems(page.replace("诗题", "十六字令三首"), "十六字令三首", "")
+        with self.assertRaises(FulltextError):
+            parse_poems(page.replace("注释", "来源不明的文字"), "诗题", "")
+
+    def test_confirmed_missing_glyph_is_searchable_and_visibly_attributed(self):
+        title = "七古·送纵宇一郎东行"
+        html = (f'<span id="nodeTitleEle">{title}</span><div id="contentDescriptionBox">'
+                '<p class="content">东瀛■剑有书还。</p><p class="content">注释</p></div>')
+        build_index(self.index, [("副编", title, URL)], fetch=lambda _: html, poetry=True)
+        result = self.cli("--collection", "诗词", "--text", "东瀛濯剑")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("东瀛■剑", result.stdout)
+        self.assertIn("东瀛濯剑", result.stdout)
+        self.assertIn("校读", result.stdout)
 
 
 if __name__ == "__main__":
