@@ -1,6 +1,18 @@
 # 毛主席智慧宝库 · mao-wisdom
 
-一个面向 OpenClaw 的中文技能。你可以用它查毛泽东著作和诗词的原文，比较流传说法与书中的用字，也可以把调查研究、主要矛盾分析等方法用在一个具体的工作或学习问题上。
+一个面向 OpenClaw 的中文技能。你可以带来一个正在犹豫的决定，用毛泽东著作中的思想方法拆开来看：我们知道什么，哪一步值得先做，出现什么情况就应改主意。也可以用它读文章、查原句和辨析出处。
+
+## 从你碰到的事开始
+
+| 你可能正在想 | 可以先试什么 |
+| --- | --- |
+| 明明很努力，为什么总记不住？ | 隔天合上书做一次回忆，看困难出在记不住、分不清，还是用不出。再决定下一轮怎么练。[实践检验](references/methods-guide.md#test-in-practice) |
+| 几件事都很急，我先做哪件？ | 找出其余事项正在等谁，再查有没有一件虽不牵连别人、却有硬期限。[抓重点与兼顾](references/methods-guide.md#prioritize) |
+| 换过两次办法还是没起色，还要坚持吗？ | 分开看目标是否仍值得、办法是否产生变化、自己能承担多少投入。给下一次决定留一个可以观察的依据。[遇到挫折](references/methods-guide.md#handle-setbacks) |
+
+直接对技能说“我碰到的是……，现在可以选……”。若已有尝试，带上一条实际结果会更容易判断。[更多日常情境与原文出处](references/methods-guide.md)
+
+也可以在仓库根目录运行 `python scripts/search_quotes.py --method` 浏览十个问题。在命令后加“优先级”“挫折”或“群众路线”等词，可读到相应的例子和原文。
 
 ## 收录范围
 
@@ -9,7 +21,7 @@
 | 《毛泽东选集》篇名与正文片段 | [一至五卷目录](references/works-index.md)列出 229 篇正文，分卷为 18、40、31、70、70 篇。篇名随技能提供，全文片段可在首次联网建库后离线查找。第三卷的集体决议附录单列，可查篇名。 |
 | 语录用字与归属 | [语录库](references/mao-quotes.md)含 47 条已核摘句，其中 35 条引自《毛泽东选集》，12 条选自《毛泽东文集》、题词和诗词。另保留 6 条待核说法。 |
 | 文章导读 | [六篇导读](references/reading-guide.md)含调查研究、实践与认识、主要矛盾，以及《为人民服务》《党委会的工作方法》《关心群众生活，注意工作方法》。 |
-| 《毛泽东文集》篇名 | [八卷篇目](references/collected-works-index.md)可离线查找 803 篇文稿的卷次、卷内序号及 PDF 页序。打开篇名可直达对应文稿的正文首页。 |
+| 《毛泽东文集》篇名与文字片段 | [八卷篇目](references/collected-works-index.md)可查 803 篇文稿的卷次和首页。建立文集索引后，也可按记得的文字定位到具体 PDF 页。 |
 | 《毛泽东诗词集》诗题 | [1996 年版目录](references/poetry-index.md)收录正编 42 首、副编 25 首。组诗按书中题目合列，63 个题目均可直达诗文。两首同名《浣溪沙》附月份与首句。 |
 
 ## 安装到 OpenClaw
@@ -39,7 +51,7 @@ openclaw skills info mao-wisdom
 
 ## 离线检索
 
-在仓库根目录用 Python 3.9 或更高版本运行，无需安装第三方库。macOS 或 Linux 上可将 `python` 换成 `python3`。
+在仓库根目录用 Python 3.9 或更高版本运行。查篇名、查摘句或搜索已经建好的索引只需 Python 标准库。macOS 或 Linux 上可将 `python` 换成 `python3`。
 
 ```sh
 python scripts/search_quotes.py --verified 调查
@@ -77,10 +89,24 @@ python scripts/search_quotes.py --collection 诗词 --build-index
 python scripts/search_quotes.py --collection 诗词 --text "倒海翻江卷巨澜"
 ```
 
+### 怎样查《文集》八卷里的原句？
+
+第一次建库时，安装 PyMuPDF，再运行以下建库命令。工具读取八册公开 PDF，把各篇可识别的文字及其页序写入个人缓存。查询时可以断网，也可以把索引复制到另一台只有 Python 的电脑，用 `--index-path` 指定该文件。[PyMuPDF 安装说明](https://pymupdf.readthedocs.io/en/latest/installation.html)
+
+```sh
+python -m pip install PyMuPDF
+python scripts/search_quotes.py --collection 文集 --build-index
+python scripts/search_quotes.py --collection 文集 --text "沿途做了一点简略调查"
+```
+
+结果给出卷次、篇名、命中文字和 PDF 页序。默认搜索包含正文、编注和需查看原版判断的版面文字。查作者在文中的表述可加 `--part 正文`，查编辑说明可用 `--part 编注`。遇到跨页接续的句子，链接指向命中起页，结果列出起止两页。正式引用请打开 PDF，看清是否为文中转引，并取纸面印刷页码。旧字、缺字或特殊排版可能影响连续片段匹配，可以缩短词组分别查。
+
 ## 维护
 
 技能入口在 [SKILL.md](SKILL.md)。补充条目时，在[语录库](references/mao-quotes.md)相应主题下记录原句、作品名和版本。逐字核对后在“出处”行附上“核对原文”链接。对尚未证实的流传说法，在“出处”行标“待核”，把可以查证的相近表述和来源放到“辨析”一行。需要支持口语查询时，用“检索词”一行列出别称，以顿号分隔。
 
 修改语录库或检索工具后，可在仓库根目录执行 `python -m unittest discover -s tests`，检查已核条目是否都能搜到、待核条目是否会被误作原文。
+
+已有八卷文集索引时，将环境变量 `MAO_WISDOM_TEST_COLLECTED_INDEX` 指向该文件再运行测试，可复查八卷各自的原文命中、跨页定位和编注归属。
 
 [iteration.sh](iteration.sh) 供有推送权限的维护者手动运行。在项目的 `main` 分支执行 `bash iteration.sh` 会同步本项目的技能说明、语录和检索工具到 `origin/main`。如需定时同步，请在自己的任务调度器中设置运行时间。内容校订由维护者完成。

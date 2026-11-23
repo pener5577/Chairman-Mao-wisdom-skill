@@ -24,6 +24,21 @@ def search(*args):
 
 
 class QuoteSearchTests(unittest.TestCase):
+    def test_method_guide_lists_decisions_and_returns_source_and_action(self):
+        result = search("--method")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.count("？\n  "), 10)
+        self.assertIn("独立自主", result.stdout)
+        self.assertIn("为人民服务", result.stdout)
+        result = search("--method", "优先级")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("如果印刷和布展都在等", result.stdout)
+        self.assertIn("印厂只在上午收件", result.stdout)
+        self.assertIn("《党委会的工作方法》第五条", result.stdout)
+        self.assertNotIn("[已核原文]", result.stdout)
+        self.assertEqual(search("--method", "戊戌木星邮局").returncode, 1)
+        self.assertEqual(search("--method", "--verified").returncode, 2)
+
     def test_verified_catalog_matches_library(self):
         catalog = LIBRARY.read_text(encoding="utf-8")
         blocks = re.split(r"^### ", catalog, flags=re.MULTILINE)[1:]
@@ -145,7 +160,7 @@ class QuoteSearchTests(unittest.TestCase):
         self.assertEqual(len(set(pages)), 803)
         self.assertIn("本卷电子版：https://", same_title.stdout)
         self.assertIn("正文：https://www.ssmzd.com/", search("--collection", "文集", "复李济深").stdout)
-        self.assertEqual(search("--collection", "文集", "--text", "调查").returncode, 2)
+        self.assertEqual(search("--collection", "文集", "--part", "正文").returncode, 2)
 
     def test_poems_with_the_same_title_and_groups_of_poems(self):
         listing = search("--collection", "诗词")

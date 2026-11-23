@@ -38,7 +38,8 @@ log() {
 trap 'log "同步失败，请查看上方 Git 错误。" >&2' ERR
 docs=':(glob)references/**/*.md'
 files=(.gitattributes .gitignore README.md SKILL.md iteration.sh scripts/search_quotes.py
-       scripts/fulltext.py tests/test_search_quotes.py tests/test_fulltext.py tests/test_sync.py "$docs")
+       scripts/fulltext.py scripts/collected_index.py scripts/collected_pdf.py
+       tests/test_search_quotes.py tests/test_fulltext.py tests/test_collected.py tests/test_sync.py "$docs")
 
 # 先检查候选文档，再做任何暂存。SQLite 等二进制文件即使用 .md 命名也不会提交。
 git ls-files -z --cached --others --exclude-standard -- "$docs" |

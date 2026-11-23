@@ -1,4 +1,4 @@
-"""检索毛泽东著作的摘句、篇目和本地全文索引。"""
+"""查找思想方法的应用示例，以及毛泽东著作的摘句、篇目和原文。"""
 
 import argparse
 import re
@@ -10,9 +10,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+if __package__:
+    from . import collected_index, fulltext
+else:
+    import collected_index
+    import fulltext
+
 
 LIBRARY = Path(__file__).resolve().parents[1] / "references" / "mao-quotes.md"
 WORKS = LIBRARY.with_name("works-index.md")
+METHODS = LIBRARY.with_name("methods-guide.md")
 COLLECTIONS = {
     "选集": WORKS,
     "文集": LIBRARY.with_name("collected-works-index.md"),
@@ -175,50 +182,91 @@ def show_works(terms, parser, collections, *, after_quote_search=False):
     return 1
 
 
-def fulltext_command(args, parser):
-    if __package__:
-        from . import fulltext
-    else:
-        import fulltext
+def show_methods(terms, parser):
+    guide = read_text(METHODS, parser)
+    sections = re.split(r'^<a id="[a-z-]+"></a>\s*\n## ', guide, flags=re.MULTILINE)[1:]
+    hits = []
+    for section in sections:
+        heading, _, body = section.strip().partition("\n")
+        labels = field(body.splitlines(), "方法").strip()
+        short = searchable(heading + labels)
+        full = searchable(body)
+        if all(term in short or term in full for term in terms):
+            rank = sum(term not in short for term in terms)
+            text = f"{heading}\n{body.strip()}" if terms else f"{heading}\n  {labels}"
+            hits.append((rank, text))
+    if not hits:
+        print("没有找到相应的方法或情境。单独运行 --method 可浏览所有问题。", file=sys.stderr)
+        return 1
+    print("\n\n".join(content for _, content in sorted(hits, key=lambda hit: hit[0])))
+    return 0
 
-    poetry = args.collection == "诗词"
-    default_path = fulltext.DEFAULT_INDEX.with_name("poetry.sqlite3") if poetry else fulltext.DEFAULT_INDEX
-    path = (args.index_path or default_path).expanduser()
+
+def build_collection(collection, path, parser):
+    markdown = read_text(COLLECTIONS[collection], parser)
+    if collection == "文集":
+        catalog = [(i.section, int(i.number), i.title, i.url) for i in bibliography_entries(markdown) if i.url]
+        expected = {"第一卷": 67, "第二卷": 111, "第三卷": 77, "第四卷": 133,
+                    "第五卷": 116, "第六卷": 137, "第七卷": 72, "第八卷": 90}
+    elif collection == "诗词":
+        catalog = [(i.section, i.title, i.url) for i in bibliography_entries(markdown) if i.url]
+        expected = {"正编": 39, "副编": 24}
+    else:
+        catalog = [row for row in catalog_entries(markdown) if not row[0].endswith("附录")]
+        expected = {"第一卷": 18, "第二卷": 40, "第三卷": 31, "第四卷": 70, "第五卷": 70}
+    if Counter(row[0] for row in catalog) != expected:
+        parser.exit(2, "篇目目录不完整，未开始建库。\n")
+    print(f"正在建立《{BOOK_NAMES[collection]}》的本地索引……", file=sys.stderr, flush=True)
+    if collection == "文集":
+        count = collected_index.build_index(path, catalog)
+    else:
+        count = fulltext.build_index(path, catalog, poetry=collection == "诗词")
+    print(f"已索引 {count} 个题目。索引文件：{path}")
+
+
+def matching_passages(collection, path, phrase, part):
+    if collection == "文集":
+        with closing(collected_index.search_index(path, phrase)) as rows:
+            for volume, title, url, start, end, kind, snippet in rows:
+                if part and kind != part:
+                    continue
+                pages = str(start) if start == end else f"{start}–{end}"
+                yield f"[{kind}命中] {volume} · {title}（PDF 第 {pages} 页）\n{snippet}\n{url}"
+        return
+    poetry = collection == "诗词"
+    with closing(fulltext.search_index(path, phrase, poetry=poetry)) as rows:
+        for volume, title, url, number, snippet in rows:
+            position = f"题内第 {number} 首" if poetry else f"转录段 {number}"
+            message = f"[全文命中] {volume} · {title}（{position}）\n{snippet}\n{url}"
+            if poetry and title == fulltext.POEM_WITH_GAP and "■" in snippet:
+                message += f"\n校读：转录缺字以 ■ 显示，《党的文献》引此句作“东瀛濯剑有书还”。\n{fulltext.GAP_REFERENCE}"
+            yield message
+
+
+def fulltext_command(args, parser):
     if args.keywords:
         parser.error("全文查找请把一个连续片段放在 --text 后；建库命令无需关键词")
+    collection = args.collection or "选集"
+    filename = {"诗词": "poetry.sqlite3", "文集": "collected.sqlite3", "选集": fulltext.DEFAULT_INDEX.name}[collection]
+    path = (args.index_path or fulltext.DEFAULT_INDEX.with_name(filename)).expanduser()
     try:
         if args.build_index:
-            if poetry:
-                items = bibliography_entries(read_text(COLLECTIONS["诗词"], parser))
-                catalog = [(item.section, item.title, item.url) for item in items if item.url]
-                expected = {"正编": 39, "副编": 24}
-            else:
-                catalog = [row for row in catalog_entries(read_text(WORKS, parser)) if not row[0].endswith("附录")]
-                expected = {"第一卷": 18, "第二卷": 40, "第三卷": 31, "第四卷": 70, "第五卷": 70}
-            counts = Counter(volume for volume, _, _ in catalog)
-            if counts != expected:
-                parser.exit(2, "篇目目录不完整，未开始建库。\n")
-            print(f"正在从目录中的 {len(catalog)} 篇在线转录建立索引……", file=sys.stderr, flush=True)
-            count = fulltext.build_index(path, catalog, poetry=poetry)
-            print(f"已索引 {count} 个题目。索引文件：{path}")
+            build_collection(collection, path, parser)
             return 0
         limit = args.limit or 20
         shown = 0
-        with closing(fulltext.search_index(path, args.text, poetry=poetry)) as matches:
-            for volume, title, url, number, snippet in matches:
+        with closing(matching_passages(collection, path, args.text, args.part)) as matches:
+            for message in matches:
                 if shown == limit:
                     print(f"已显示前 {limit} 个命中段落。可输入更长的片段缩小范围，或调大 --limit。", file=sys.stderr)
                     break
                 if shown:
                     print()
-                position = f"题内第 {number} 首" if poetry else f"转录段 {number}"
-                print(f"[全文命中] {volume} · {title}（{position}）\n{snippet}\n{url}")
-                if poetry and title == fulltext.POEM_WITH_GAP and "■" in snippet:
-                    print(f"校读：转录缺字以 ■ 显示，《党的文献》引此句作“东瀛濯剑有书还”。\n{fulltext.GAP_REFERENCE}")
+                print(message)
                 shown += 1
         if shown:
             return 0
-        print("本地全文索引中未找到该片段。可以缩短引文，或换一种用字再查。", file=sys.stderr)
+        print("本地全文索引在所查范围内未找到该片段。可以缩短引文，或换一种用字再查。", file=sys.stderr)
         return 1
     except (fulltext.FulltextError, OSError) as error:
         parser.exit(2, f"{error}\n")
@@ -228,18 +276,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("keywords", nargs="*", help="主题、篇名或正文中的关键词，多个词须同时命中")
     mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--method", action="store_true", help="按现实问题或思想方法查找应用示例，无关键词时列出所有问题")
     mode.add_argument("--verified", action="store_true", help="只列出附有核对原文链接的摘句")
     mode.add_argument("--works", action="store_true", help="查《毛泽东选集》一至五卷的篇名或卷次，无关键词时列出全部篇目")
-    mode.add_argument("--build-index", action="store_true", help="联网建立或更新《选集》或《诗词集》的本地全文索引")
+    mode.add_argument("--build-index", action="store_true", help="联网建立或更新所选书目的本地全文索引")
     mode.add_argument("--text", metavar="引文", help="从已建索引离线定位一段连续文字")
-    parser.add_argument("--collection", choices=COLLECTIONS, help="按书查目录，可选选集、文集、诗词")
+    parser.add_argument("--collection", choices=COLLECTIONS, help="选择篇目目录或全文索引所用的书，默认选集")
     parser.add_argument("--index-path", type=Path, metavar="文件", help="指定建库或全文查找使用的 SQLite 文件")
     parser.add_argument("--limit", type=int, metavar="条数", help="全文命中段落的显示上限，默认 20")
+    parser.add_argument("--part", choices=("正文", "编注", "版面"), help="按文字类型筛选《文集》全文结果")
     args = parser.parse_args()
-    if args.collection and args.verified:
-        parser.error("--verified 搜索摘句库，与 --collection 分开使用")
-    if args.collection == "文集" and (args.build_index or args.text is not None):
-        parser.error("《文集》可查篇名与原文入口，全文索引支持《选集》和《诗词集》")
+    if args.collection and (args.verified or args.method):
+        parser.error("--verified 和 --method 各有独立的资料范围，与 --collection 分开使用")
+    if args.part and (args.collection != "文集" or args.text is None):
+        parser.error("--part 与 --collection 文集 --text 配合使用")
     if args.limit is not None and (args.text is None or args.limit < 1):
         parser.error("--limit 仅用于 --text，请输入正整数")
     if args.build_index or args.text is not None:
@@ -247,9 +297,11 @@ def main():
     if args.index_path is not None:
         parser.error("--index-path 仅用于 --build-index 或 --text")
     terms = [searchable(word) for arg in args.keywords for word in arg.split()]
-    if (not terms and not (args.verified or args.works or args.collection)) or any(not term for term in terms):
-        parser.error("请输入文字关键词，或使用 --verified 浏览已核摘句、--works 浏览篇目")
+    if (not terms and not (args.verified or args.works or args.collection or args.method)) or any(not term for term in terms):
+        parser.error("请输入关键词，或使用 --method 浏览现实问题、--verified 浏览摘句、--works 浏览篇目")
 
+    if args.method:
+        return show_methods(terms, parser)
     if args.works or args.collection:
         return show_works(terms, parser, (args.collection or "选集",))
 
