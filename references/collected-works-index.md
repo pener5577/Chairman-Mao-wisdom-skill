@@ -2,11 +2,11 @@
 
 中共中央文献研究室编，人民出版社于 1993 年、1996 年、1999 年分三批出版。八卷共 803 篇，第一至五卷 504 篇，第六至八卷 299 篇。首篇作于 1921 年 1 月，末篇作于 1975 年 7 月。[编辑组成员冯蕙的《毛泽东文集》编辑记事](https://myzx.xtu.edu.cn/info/1011/2375.htm) · [八卷书目](https://www.theorychina.org.cn/ztjj/jnmzdtzdc130zn/zyzz/)
 
-以下按发行电子书的卷次和目录顺序列出主篇目。卷内序号可用来区分同题文稿。例如第一卷有两篇《给傅作义的信》。纸本注号、出版说明和篇内小标题均不单列。需要核实引文时，可从相应卷的人民网目录打开正文。
+以下按发行电子书的卷次和目录顺序列出主篇目。卷内序号可用来区分同题文稿。例如第一卷有两篇《给傅作义的信》。纸本注号、出版说明和篇内小标题均不单列。每卷附有公开的电子书总目录及分卷资料链接，可以按篇名或纸本日期继续查证。
 
 ## 第一卷
 
-本卷 67 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [人民网本卷文章目录](https://cpc.people.com.cn/GB/69112/70190/70197/70355/index.html)
+本卷 67 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [承德应用技术职业学院本卷电子版](https://www.cdct.edu.cn/mayuan/2023/jdpj_0529/33.html)
 
 1. 在新民学会长沙会员大会上的发言
 2. 给蔡和森的信
@@ -78,7 +78,7 @@
 
 ## 第二卷
 
-本卷 111 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [人民网本卷文章目录](https://cpc.people.com.cn/GB/69112/70190/70197/70356/index.html)
+本卷 111 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [承德应用技术职业学院本卷电子版](https://www.cdct.edu.cn/mayuan/2023/jdpj_0529/41.html)
 
 1. 关于红军作战的原则
 2. 对国防问题的意见
@@ -194,7 +194,7 @@
 
 ## 第三卷
 
-本卷 77 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [人民网本卷文章目录](https://cpc.people.com.cn/GB/69112/70190/70197/70357/index.html)
+本卷 77 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [承德应用技术职业学院本卷电子版](https://www.cdct.edu.cn/mayuan/2023/jdpj_0529/42.html)
 
 1. 争取在抗战胜利后与国民党建立和平局面
 2. 请各地总结整风学习的经验
@@ -276,7 +276,7 @@
 
 ## 第四卷
 
-本卷 133 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [人民网本卷文章目录](https://cpc.people.com.cn/GB/69112/70190/70197/70358/index.html)
+本卷 133 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [承德应用技术职业学院本卷电子版](https://www.cdct.edu.cn/mayuan/2023/jdpj_0529/43.html)
 
 1. 关于赴重庆谈判问题复蒋介石的电报
 2. 抗日战争胜利后的新形势和新任务
@@ -416,6 +416,8 @@
 
 本卷 116 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [人民网本卷文章目录](https://cpc.people.com.cn/GB/69112/70190/70197/70359/index.html)
 
+人民网该卷的目录收录 115 条。第 82 项另附韶山毛泽东同志纪念馆标明卷次和日期的全文。
+
 1. 三军协力解决大别山困难
 2. 应向全军施行政策与纪律教育
 3. 中原和西北地区的作战部署
@@ -497,7 +499,7 @@
 79. 中共发言人就和平谈判问题发表谈话
 80. 不要在约法八章等之外再发任何口号
 81. 北平问题和平解决的基本原因
-82. 复李济深等五十六人电
+82. [复李济深等五十六人电](https://www.ssmzd.com/content/645546/51/12851001.html)
 83. 对部队进行地理常识教育极为重要
 84. 把南北通船通航通邮诸事当作一件大事去做
 85. 在中共七届二中全会上的总结
@@ -677,7 +679,7 @@
 
 ## 第七卷
 
-本卷 72 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [人民网本卷文章目录](https://cpc.people.com.cn/GB/69112/70190/70197/70361/index.html)
+本卷 72 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [江苏科技大学所藏本卷电子版](https://mkszy.just.edu.cn/_upload/article/files/4f/ca/8a8eb81b4ce5b739b30bbd8a427e/c6afe67a-fb7d-47b3-97d3-dd82ad67d071.pdf)
 
 1. 社会主义革命的目的是解放生产力
 2. 同藏族人士的谈话
@@ -754,7 +756,7 @@
 
 ## 第八卷
 
-本卷 90 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [人民网本卷文章目录](https://cpc.people.com.cn/GB/69112/70190/70197/70362/index.html)
+本卷 90 篇。[核对目录](https://www.dedao.cn/ebook/detail?id=nroX7MYDaKMjy7eNqrmOX6pnAQ5Vg04dab0JzxbE9LZl1o8RkGd2BPYv4x6d9meB) · [本卷书目](https://www.theorychina.org.cn/c/2023-12-22/1490001.shtml)
 
 1. 马列主义基本原理至今未变，个别结论可以改变
 2. 非洲当前的任务是反对帝国主义，不是反对资本主义
@@ -833,7 +835,7 @@
 75. 中法之间有共同点
 76. 改革学校课程设置和讲授方法
 77. 支持被压迫人民反对帝国主义的战争
-78. 从历史来看亚非拉人民斗争的前途
+78. [从历史来看亚非拉人民斗争的前途](https://www.txssw.com/content/645456/51/12319672.html)
 79. 关于人的认识问题
 80. 同斯诺的谈话
 81. 给章士钊的信

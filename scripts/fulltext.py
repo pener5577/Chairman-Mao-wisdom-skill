@@ -154,13 +154,23 @@ def _normalized(text):
     return "".join(_fold(c) for c in text)
 
 
-def _check_index(db):
+def _check_identity(db):
     if (db.execute("PRAGMA application_id").fetchone()[0] != APPLICATION_ID or
             db.execute("PRAGMA user_version").fetchone()[0] != VERSION):
         raise FulltextError("该文件不是可识别的毛选全文索引，请指定另一个索引文件。")
+
+
+def _check_index(db):
+    _check_identity(db)
     count = db.execute("SELECT work_count FROM build_info").fetchone()
     if not count or not count[0] or count[0] != db.execute("SELECT count(*) FROM works").fetchone()[0]:
         raise FulltextError("全文索引不完整，请重新构建。")
+    empty = db.execute("""
+        SELECT 1 FROM works w WHERE NOT EXISTS
+        (SELECT 1 FROM paragraphs p WHERE p.work = w.id) LIMIT 1
+    """).fetchone()
+    if empty:
+        raise FulltextError("全文索引缺少正文，请重新构建。")
 
 
 def _read_index(path):
@@ -173,7 +183,7 @@ def _check_target(path):
     if path.exists():
         try:
             with closing(_read_index(path)) as db:
-                _check_index(db)
+                _check_identity(db)
         except sqlite3.Error as exc:
             raise FulltextError("目标不是本工具可识别的索引，已保留原文件。") from exc
 

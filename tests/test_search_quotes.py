@@ -135,6 +135,12 @@ class QuoteSearchTests(unittest.TestCase):
         self.assertIn("《毛泽东文集》第一卷 · 寻乌调查", result.stdout)
         self.assertIn("核对目录：https://", result.stdout)
         self.assertEqual(search("寻乌调查").stdout, result.stdout)
+        same_title = search("--collection", "文集", "第一卷", "给傅作义的信")
+        self.assertEqual(same_title.stdout.count("[篇目]"), 2)
+        self.assertIn("目录第 43 项", same_title.stdout)
+        self.assertIn("目录第 53 项", same_title.stdout)
+        self.assertIn("本卷电子版：https://", same_title.stdout)
+        self.assertIn("正文：https://www.ssmzd.com/", search("--collection", "文集", "复李济深").stdout)
         self.assertEqual(search("--collection", "文集", "--text", "调查").returncode, 2)
 
     def test_poems_with_the_same_title_and_groups_of_poems(self):
@@ -142,6 +148,7 @@ class QuoteSearchTests(unittest.TestCase):
         self.assertEqual(listing.returncode, 0, listing.stderr)
         self.assertEqual(listing.stdout.count("《毛泽东诗词集》正编 · "), 39)
         self.assertEqual(listing.stdout.count("《毛泽东诗词集》副编 · "), 24)
+        self.assertEqual(len(set(re.findall(r"^正文：(https://\S+)$", listing.stdout, re.M))), 63)
         result = search("--works", "--collection", "诗词", "浣溪沙", "和柳亚子")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.count("[篇目]"), 2)

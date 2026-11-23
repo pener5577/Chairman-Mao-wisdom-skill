@@ -22,6 +22,7 @@ BOOK_NAMES = {"选集": "毛泽东选集", "文集": "毛泽东文集", "诗词"
 VOLUME_NUMBERS = str.maketrans("一二三四五六七八", "12345678")
 SOURCE_LINK = re.compile(r"\[核对原文\]\((https?://[^)\s]+)\)")
 PAGE_LINK = re.compile(r"^\[查看纸本页码\]\((https?://[^)\s]+)\)$", re.MULTILINE)
+MARKDOWN_LINK = re.compile(r"\[([^\]]+)\]\((https?://[^)\s]+)\)")
 
 
 @dataclass
@@ -110,16 +111,23 @@ def catalog_entries(catalog):
 
 
 def bibliography_entries(markdown):
-    section = source = ""
+    section = ""
+    sources = []
     for line in markdown.splitlines():
         if line.startswith("## "):
-            section, source = line[3:].strip(), ""
-        link = re.search(r"\[核对目录\]\((https?://[^\s)]+)\)", line)
-        if link:
-            source = link.group(1)
+            section, sources = line[3:].strip(), []
+        if "[核对目录](" in line:
+            sources = MARKDOWN_LINK.findall(line)
         row = re.fullmatch(r"(\d+)\. (.+)", line)
-        if section and source and row:
-            yield section, row.group(2), source, row.group(1)
+        if section and sources and row:
+            number, title = row.groups()
+            direct = MARKDOWN_LINK.fullmatch(title)
+            links = sources
+            if direct:
+                title, url = direct.groups()
+                links = [("正文", url), *sources]
+            addresses = "\n".join(f"{label}：{url}" for label, url in links)
+            yield section, title, f"目录第 {number} 项\n{addresses}"
 
 
 def show_works(terms, parser, collections, *, after_quote_search=False):
@@ -128,14 +136,13 @@ def show_works(terms, parser, collections, *, after_quote_search=False):
         markdown = read_text(COLLECTIONS[collection], parser)
         selected = collection == "选集"
         book = BOOK_NAMES[collection]
-        rows = ((*entry, None) for entry in catalog_entries(markdown)) if selected else bibliography_entries(markdown)
-        for section, title, url, number in rows:
+        rows = catalog_entries(markdown) if selected else bibliography_entries(markdown)
+        for section, title, address in rows:
             numeric = section.translate(VOLUME_NUMBERS)
             fields = (searchable(title), book + section, book + numeric)
             if all(any(term in field for field in fields) for term in terms):
                 kind = "附录" if section.endswith("附录") else "篇目"
                 label = section if selected else f"《{book}》{section}"
-                address = url if selected else f"目录第 {number} 项 · 核对目录：{url}"
                 matches.append(f"[{kind}] {label} · {title}\n{address}")
     if matches:
         print("\n\n".join(matches))

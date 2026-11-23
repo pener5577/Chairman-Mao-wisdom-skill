@@ -102,6 +102,17 @@ class FulltextTests(unittest.TestCase):
         with closing(sqlite3.connect(self.index)) as db:
             self.assertEqual(db.execute("SELECT note FROM personal_data").fetchone(), ("keep",))
 
+    def test_rebuild_repairs_an_identifiable_incomplete_index(self):
+        self.build()
+        with closing(sqlite3.connect(self.index)) as db:
+            db.execute("DELETE FROM paragraphs")
+            db.commit()
+        broken = self.cli("--text", "读一页书")
+        self.assertEqual(broken.returncode, 2)
+        self.assertIn("重新构建", broken.stderr)
+        self.build()
+        self.assertEqual(self.cli("--text", "读一页书").returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
