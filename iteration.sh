@@ -1,24 +1,49 @@
-#!/bin/bash
-# 毛选skill每小时迭代任务
-# 每次迭代：扩充语录、优化SKILL.md、提升毛主席形象塑造
+#!/usr/bin/env bash
+# 同步已经编辑好的项目文件，可由外部定时任务调用。
+set -euo pipefail
 
-cd /home/kali/.openclaw/workspace/Chairman-Mao-wisdom-skill
+CDPATH= cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")"
+# Git 钩子可能继承调用方的工作树和索引位置。
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR
 
-# 记录本次迭代开始
-echo "[$(date)] 毛选skill迭代开始" >> /home/kali/.openclaw/workspace/Chairman-Mao-wisdom-skill/iteration.log
+if [[ ! -e .git || -n "$(git rev-parse --show-prefix)" ]] ||
+   ! git ls-files --error-unmatch -- iteration.sh >/dev/null ||
+   ! git grep -q -E '^name:[[:blank:]]*mao-wisdom[[:space:]]*$' HEAD -- SKILL.md; then
+    echo "请在本项目的 Git 工作树根目录运行 iteration.sh。" >&2
+    exit 1
+fi
 
-# 检查是否有变更
-if git diff --quiet && git diff --staged --quiet; then
-    echo "[$(date)] 无变更，跳过" >> /home/kali/.openclaw/workspace/Chairman-Mao-wisdom-skill/iteration.log
+if [[ "$(git symbolic-ref --quiet --short HEAD)" != main ]]; then
+    echo "只有 main 分支可以运行自动同步。" >&2
+    exit 1
+fi
+git remote get-url --push origin >/dev/null
+
+log() {
+    printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" | tee -a iteration.log
+}
+
+trap 'log "同步失败，请查看上方 Git 错误。" >&2' ERR
+files=(.gitattributes .gitignore README.md SKILL.md iteration.sh scripts/search_quotes.py
+       tests/test_search_quotes.py ':(glob)references/**/*.md')
+
+# ls-files 会列出受管文件和新文件，并尊重 .gitignore。NUL 分隔可保留文件名中的空格和换行。
+git ls-files -z --cached --others --exclude-standard -- "${files[@]}" |
+    git --literal-pathspecs add -A --pathspec-from-file=- --pathspec-file-nul
+
+if ! git diff --cached --quiet -- "${files[@]}"; then
+    # --only 保留项目范围以外已经暂存的改动。
+    git diff --cached --no-renames --name-only -z -- "${files[@]}" |
+        git --literal-pathspecs commit --only --pathspec-from-file=- --pathspec-file-nul \
+            -m "更新智慧宝库项目内容 [$(date '+%Y-%m-%d %H:%M')]"
+fi
+
+# 如果上次提交成功而推送失败，即使工作树干净也要重试。
+if git rev-parse --verify --quiet refs/remotes/origin/main >/dev/null &&
+   git merge-base --is-ancestor HEAD refs/remotes/origin/main; then
+    log "没有待推送的本地提交。"
     exit 0
 fi
 
-# 提交并推送
-git add -A
-git commit -m "迭代更新 [$(date '+%Y-%m-%d %H:%M')]
-
-- 持续完善毛主席智慧宝库
-- 扩充经典语录和思想内容"
-git push origin main
-
-echo "[$(date)] 迭代完成并推送" >> /home/kali/.openclaw/workspace/Chairman-Mao-wisdom-skill/iteration.log
+git -c push.followTags=false push origin refs/heads/main:refs/heads/main
+log "已推送到 origin/main。"
