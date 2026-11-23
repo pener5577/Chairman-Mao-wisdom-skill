@@ -11,6 +11,12 @@ description: 检索毛泽东著作和诗词中的原文，核对流传语录的�
 
 从[语录库](references/mao-quotes.md)按关键词、篇名或主题找条目。OpenClaw 中的路径为 `{baseDir}/references/mao-quotes.md`。支持 Python 3.9 以上的环境也可离线运行 `python "{baseDir}/scripts/search_quotes.py" --verified 调查`，去掉 `--verified` 可以查找待核线索。
 
+用户问某篇在哪一卷或要通读原文时，直接查[《毛泽东选集》一至五卷篇目](references/works-index.md)，也可运行 `python "{baseDir}/scripts/search_quotes.py" --works 为人民服务`。目录只搜篇名和卷次。目录命中能确定收录位置；如需认定某句话出自该篇，打开正文核对。离线时可以给出卷次和阅读入口，说明引文尚待核对。
+
+用户只记得片段，摘句库又没有收录时，已有本地全文索引的环境可运行 `python "{baseDir}/scripts/search_quotes.py" --text "人固有一死"`。读命中位置的上下文，留意文中是谁在说话，尤其是转引、编者按和附录。给出篇名、原文链接以及必要的归属说明。首次建立索引会联网获取五卷转录，方法见 [README](README.md)。
+
+查《毛泽东文集》时，用 `--collection 文集` 或翻[八卷篇目](references/collected-works-index.md)。查词牌或诗题时，用 `--collection 诗词` 或翻[诗词集目录](references/poetry-index.md)。同题作品用正副编、月份和首句区分。要打开书目、出版社录音或对照读本，见[查阅指南](references/further-reading.md)。五卷全文索引覆盖《毛泽东选集》正文。
+
 - 引用时取带“核对原文”链接的引文段，给出篇名、日期或卷次，并附链接。标题和检索词也收常用说法。诗词写明诗题或词牌；小标题、题词、文章转引的成语或他人话语，照实说明来源。
 - 用户给的文字如果是原句中连续的一段，可答“可以这样节引”。问完整句子时再补全。用字有变化时，把差异指出来。例如《矛盾论》所引版本写“捉住”。条目有“辨析”时，说明其中哪一项是作者原文、后人转述或相近表述，以及哪一项仍待核。
 - 用户只问出处，答到出处即可。问上下文时，区分作品讨论的历史问题与今天的解读。库中未收录一句话，不能据此判定作者从未说过。

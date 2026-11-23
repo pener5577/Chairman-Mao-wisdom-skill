@@ -19,13 +19,40 @@ if [[ "$(git symbolic-ref --quiet --short HEAD)" != main ]]; then
 fi
 git remote get-url --push origin >/dev/null
 
+# 冲突文件的 git add 会被 Git 当作人工解决。先检查整个工作树的操作状态。
+for state in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD rebase-merge rebase-apply sequencer; do
+    if [[ -e "$(git rev-parse --git-path "$state")" ]]; then
+        echo "Git 操作尚在进行（$state），请处理后再同步。" >&2
+        exit 1
+    fi
+done
+if [[ -n "$(git ls-files --unmerged)" ]]; then
+    echo "工作树包含未解决的冲突，请处理后再同步。" >&2
+    exit 1
+fi
+
 log() {
     printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" | tee -a iteration.log
 }
 
 trap 'log "同步失败，请查看上方 Git 错误。" >&2' ERR
+docs=':(glob)references/**/*.md'
 files=(.gitattributes .gitignore README.md SKILL.md iteration.sh scripts/search_quotes.py
-       tests/test_search_quotes.py ':(glob)references/**/*.md')
+       scripts/fulltext.py tests/test_search_quotes.py tests/test_fulltext.py tests/test_sync.py "$docs")
+
+# 先检查候选文档，再做任何暂存。SQLite 等二进制文件即使用 .md 命名也不会提交。
+git ls-files -z --cached --others --exclude-standard -- "$docs" |
+    while IFS= read -r -d '' doc; do
+        if [[ -L "$doc" || ( -e "$doc" && ! -f "$doc" ) ]]; then
+            printf '资料文件须为普通文本文件：%s\n' "$doc" >&2
+            exit 1
+        fi
+        [[ -f "$doc" ]] || continue  # 已删除的文档可以同步
+        if IFS= read -r -d '' _ < "$doc"; then
+            printf '资料目录中发现二进制文件：%s\n' "$doc" >&2
+            exit 1
+        fi
+    done
 
 # ls-files 会列出受管文件和新文件，并尊重 .gitignore。NUL 分隔可保留文件名中的空格和换行。
 git ls-files -z --cached --others --exclude-standard -- "${files[@]}" |

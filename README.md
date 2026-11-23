@@ -2,6 +2,16 @@
 
 一个面向 OpenClaw 的中文技能。你可以用它查毛泽东著作和诗词的原文，比较流传说法与书中的用字，也可以把调查研究、主要矛盾分析等方法用在一个具体的工作或学习问题上。
 
+## 收录范围
+
+| 要查的内容 | 当前覆盖 |
+| --- | --- |
+| 《毛泽东选集》篇名与正文片段 | [一至五卷目录](references/works-index.md)列出 229 篇正文，分卷为 18、40、31、70、70 篇。篇名随技能提供，全文片段可在首次联网建库后离线查找。第三卷的集体决议附录单列，可查篇名。 |
+| 语录用字与归属 | [语录库](references/mao-quotes.md)含 47 条已核摘句，其中 35 条引自《毛泽东选集》，12 条选自《毛泽东文集》、题词和诗词。另保留 6 条待核说法。 |
+| 文章导读 | [三篇导读](references/reading-guide.md)涵盖《反对本本主义》《实践论》《矛盾论》。 |
+| 《毛泽东文集》篇名 | [八卷篇目](references/collected-works-index.md)可离线查找 803 篇文稿的卷次。[查阅指南](references/further-reading.md)说明如何从书目找到具体文献。 |
+| 《毛泽东诗词集》诗题 | [1996 年版目录](references/poetry-index.md)收录正编 42 首、副编 25 首。组诗按书中题目合列，同名作品附月份和首句。 |
+
 ## 安装到 OpenClaw
 
 在你的 OpenClaw 工作区根目录运行以下命令。Git 会把技能和语录库一起放进 `skills/mao-wisdom`，这个目录只需克隆一次。
@@ -34,10 +44,29 @@ openclaw skills info mao-wisdom
 ```sh
 python scripts/search_quotes.py --verified 调查
 python scripts/search_quotes.py 吃梨子 实践论
-python scripts/search_quotes.py --verified
+python scripts/search_quotes.py --works 第三卷 为人民服务
+python scripts/search_quotes.py --collection 文集 寻乌调查
+python scripts/search_quotes.py --collection 诗词 浣溪沙 和柳亚子
 ```
 
-第一个命令只找已核对的条目，第二个用常见说法和篇名查找同一条目，第三个按语录库顺序列出所有已核条目。带关键词时，优先显示正文和标题中的匹配，单凭主题命中的条目靠后。复制引文请取“已核原文”一行。想查一条转述的来历，也可以用“辨析”中的词搜索。
+前三个命令分别查已核摘句、流传说法和《选集》篇目。后两个可以找到《寻乌调查》的卷次，以及 1950 年 10 月和 11 月的两首同名词。省略关键词时，`--verified` 列出全部已核摘句，`--works` 列出《选集》目录，`--collection 文集` 或 `--collection 诗词` 列出相应书目。
+
+普通搜索先找语录，未命中时再查三部书的篇名。《选集》篇目链接到文章，《文集》和《诗词集》列出卷次或正副编，并附目录出处。要逐字引用，取“已核原文”一行，或在对应版本中重新核对。“辨析”中的词也可用来查一条转述的来历。
+
+### 只记得一句话，怎样找出篇名？
+
+在仓库根目录执行第一条命令，联网读取五卷目录所列的 229 篇转录，在个人缓存目录建立全文索引。建好后，第二条命令可断网使用。
+
+```sh
+python scripts/search_quotes.py --build-index
+python scripts/search_quotes.py --text "人固有一死"
+```
+
+结果列出命中的作品、转录段号、附近文字和阅读链接，默认显示前 20 段，可用 `--limit 50` 调整。标点或空格略有差异时也可匹配。遇到异体字、改写或跨段引文，可拆成较短的词组分别查找。段号用于定位这份网页转录。正式引用时，应再核对所用版本的原句和纸本页码。
+
+需要把索引放在指定位置时，在上述两条命令中都加上 `--index-path "路径/mao-wisdom.sqlite3"`。再次执行建库命令即可刷新，获取失败会保留原有索引。
+
+例如，《论联合政府》同一段在网页转录里写作“其它政党”，人民出版社 1991 年第二版用“其他政党”。用两版共有的“有无认真的自我批评”检索，即可定位段落，再按所用版本引用。[纸本第三卷第 1096 页](https://ebook.theorychina.org.cn/ebook/upload/storage/files/2022/07/26/96241bf235bd68bad86fed6360e6a8bc32635/files/basic-html/page318.html) · [网页转录](https://www.marxists.org/chinese/maozedong/marxist.org-chinese-mao-19450424.htm)
 
 ## 维护
 

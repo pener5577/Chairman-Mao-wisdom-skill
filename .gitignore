@@ -13,3 +13,6 @@ node_modules/
 
 # 本地 Python 检索测试
 __pycache__/
+
+# 个人全文索引
+*.sqlite3
